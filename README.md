@@ -123,7 +123,7 @@ Sentinel está preparado para Windows con Python 3.12. No se presenta como clasi
 
 ## Licencia
 
-El repositorio no incluye una licencia. Puedes descargar y consultar el código, pero no hay permisos generales definidos para reutilizarlo, modificarlo o redistribuirlo.
+Sentinel se distribuye bajo la licencia [MIT](LICENSE). Puedes usar, modificar y redistribuir el proyecto, incluso con fines comerciales, siempre que conserves el aviso de copyright y la licencia en las copias o partes sustanciales del software.
 
 <div align="center">
 
