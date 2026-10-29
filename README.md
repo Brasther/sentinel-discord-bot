@@ -1,93 +1,105 @@
+<div align="center">
+
 # 🛡️ Sentinel
 
-### Control de ruido para canales de voz de Discord, con panel local en español.
+### Moderación de audio en tiempo real para Discord
 
-Sentinel analiza el audio recibido en un canal de voz y muestra niveles, alertas y herramientas de moderación en un panel web. Incluye una demo para explorar el panel sin conectar un bot.
+**Un bot de voz con análisis DSP local, calibración por ambiente y un panel web para entender qué está pasando antes de actuar.**
 
-> **Empieza en modo de observación.** El análisis puede equivocarse y no sabe distinguir una voz humana de audio reproducido por una TV, teléfono o aplicación. Revisa el comportamiento antes de habilitar medidas automáticas.
+[Ver el proyecto](https://github.com/Brasther/sentinel-discord-bot) · [Instalación paso a paso](docs/INSTALACION_WINDOWS.md) · [Reportar un problema](https://github.com/Brasther/sentinel-discord-bot/issues)
 
-**Windows · Python 3.12 · Discord**
+**Python 3.12** · **discord.py** · **Flask** · **SQLite** · **WebRTC VAD**
+
+</div>
 
 ---
 
-## ⚡ Inicio rápido
+## El proyecto
 
-1. Descarga el proyecto: **[Code → Download ZIP](https://github.com/Brasther/sentinel-discord-bot/archive/refs/heads/main.zip)** y descomprímelo.
-2. Instala [Python 3.12](https://www.python.org/downloads/windows/). Si ya tienes Python Install Manager, puedes instalarlo desde una terminal con `py install 3.12`.
-3. Crea tu bot en el [Discord Developer Portal](https://discord.com/developers/applications). En **Bot**, activa **Message Content Intent** y copia el token.
-4. Haz doble clic en **`Iniciar_Sentinel.cmd`**. La primera vez te pedirá el token de forma privada y creará el archivo local `.env`.
-5. Espera mientras instala las dependencias. Cuando aparezca el mensaje de inicio, abre **http://localhost:5000**.
-6. En Discord, entra a un canal de voz y escribe **`!vigilar`** en un canal de texto.
+Sentinel escucha el audio que Discord entrega al bot, analiza señales por usuario y presenta el estado del canal en un dashboard local. Está pensado para probar, calibrar y moderar con controles visibles, empezando siempre en modo de observación.
 
-¿Primera vez creando un bot? Sigue la [instalación paso a paso con imágenes y detalles](docs/INSTALACION_WINDOWS.md).
+> La detección de voz y ruido es heurística: no identifica si un sonido viene de una persona, una TV o una aplicación. Puede haber falsos positivos. Revisa los resultados antes de activar medidas automáticas.
 
-> El token no se muestra mientras lo escribes. No lo publiques ni lo envíes a nadie. `.env` está excluido de Git.
+## Vista del panel
 
-## ✨ Qué incluye
+La captura muestra datos de demostración; no representa una conexión real a Discord.
 
-- **Panel local:** estado del canal, niveles de audio, historial y controles por persona.
-- **Calibración:** ajusta el umbral al ambiente del canal.
-- **Modo de observación:** analiza el audio sin aplicar nuevos castigos.
-- **Demo segura:** usa `Ver_Panel_Demo.cmd` y abre **http://localhost:5001**. No requiere token ni se conecta a Discord.
-- **Recuperación de voz:** intenta reconectar ante cortes inesperados.
+<p align="center">
+  <img src="docs/images/panel-demo.png" alt="Panel de Sentinel con niveles de audio y controles por usuario usando datos de demostración" width="900">
+</p>
 
-El audio se procesa localmente y Sentinel no lo guarda ni lo envía a servicios externos. Discord transporta el audio hasta el bot para su análisis.
+## Qué puedes hacer
 
-## 🎮 Primer uso
+- **Observar audio por usuario:** niveles RMS, estado, infracciones y actividad reciente.
+- **Calibrar el ambiente:** estima un umbral usando muestras de fondo sin voz.
+- **Ajustar controles individuales:** sensibilidad, gracia, perfil y protección de voz.
+- **Probar sin bot:** abrir una demo aislada con datos simulados.
+- **Recuperar la escucha:** vigilar desconexiones y conservar el estado al recargar el motor de audio.
 
-1. Entra a un canal de voz.
-2. En un canal de texto, escribe `!vigilar`. Quien lo ejecuta necesita el permiso **Silenciar miembros**.
-3. En el panel, empieza en **Solo observar** y calibra con el canal en silencio.
-4. Revisa las alertas y ajusta la sensibilidad antes de activar castigos.
-5. Para desconectar el bot, escribe `!salir`.
+## Inicio rápido
 
-Para usar medidas de moderación, asigna al bot solo los permisos que necesite en tu servidor. Lee [cómo invitar y configurar el bot](docs/INSTALACION_WINDOWS.md#3-crea-e-invita-tu-bot-a-discord).
+### Requisitos
 
-## 🔐 Seguridad y privacidad
+- Windows 10/11 y Python 3.12.
+- Un bot creado en [Discord Developer Portal](https://discord.com/developers/applications).
+- Un servidor donde puedas invitar el bot y configurar permisos.
 
-- Mantén `DISCORD_TOKEN` privado. Si se filtra, regénéralo desde Discord Developer Portal.
-- El archivo `.env`, bases SQLite, registros, respaldos y entorno virtual se ignoran en Git.
-- El panel escucha en `127.0.0.1`; no lo expongas a Internet. No tiene inicio de sesión para acceso remoto.
-- Usa Sentinel únicamente en servidores donde tengas autorización para moderar.
+### Instalar
 
-## 🧰 Configuración
+1. Descarga el [ZIP del proyecto](https://github.com/Brasther/sentinel-discord-bot/archive/refs/heads/main.zip) y descomprímelo.
+2. En Discord Developer Portal, crea el bot, activa **Message Content Intent** y copia el token.
+3. Ejecuta **`Iniciar_Sentinel.cmd`**. El asistente te pedirá el token sin mostrarlo y lo guardará localmente.
+4. Espera a que se instalen las dependencias y abre **http://localhost:5000**.
+5. Entra a un canal de voz y escribe **`!vigilar`** en un canal de texto.
 
-La primera ejecución de `Iniciar_Sentinel.cmd` abre el asistente si todavía no configuraste el token. Para cambiarlo después, ejecuta **`Configurar_Sentinel.cmd`**.
+La primera ejecución crea `.venv` e instala los paquetes. Sentinel requiere Python 3.12 y conexión a Internet durante esta instalación.
 
-| Opción | Para qué sirve | Valor predeterminado |
-| --- | --- | --- |
-| Token del bot | Conectar Sentinel a Discord | Obligatorio |
-| ID del propietario | Añadir tu cuenta a la lista protegida | Opcional |
-| ID del canal de registros | Enviar eventos al canal elegido | Opcional |
-| Dirección del panel | Equipo donde escucha el panel | `127.0.0.1` |
-| Puerto del panel | Puerto local | `5000` |
+> **¿Primera vez con bots de Discord?** Sigue la [guía completa de instalación](docs/INSTALACION_WINDOWS.md), con permisos, invitación al servidor y solución de problemas.
 
-El asistente solicita el token sin mostrarlo en pantalla. También puedes editar `.env` manualmente; las variables están descritas en [`.env.example`](.env.example).
+### Probar la demo
 
-## 🩹 Ayuda rápida
+Ejecuta **`Ver_Panel_Demo.cmd`** y abre **http://localhost:5001**. No necesita token, no se conecta a Discord y no puede aplicar moderación.
 
-| Problema | Qué hacer |
+## Diseño y arquitectura
+
+```text
+Discord Voice ──► receptor PCM ──► AudioEngine por usuario
+                                       │
+                            filtro + VAD + RMS + umbral
+                                       │
+                    puntuación / observación / moderación
+                                       │
+            SQLite ◄── eventos y ajustes ──► Flask + Socket.IO
+                                                │
+                                       panel local del navegador
+```
+
+- **Audio:** procesa PCM mono a 48 kHz en bloques de 20 ms. El motor mantiene estado separado por usuario y combina RMS filtrado, detector VAD y evidencia temporal.
+- **Calibración:** calcula el percentil 90 de muestras válidas de fondo y requiere al menos 25 bloques sin voz.
+- **Persistencia:** guarda configuración, métricas y recuperación de moderación en SQLite.
+- **Interfaz:** Flask y Socket.IO sirven el panel solo en `127.0.0.1` de forma predeterminada.
+- **Actualización del detector:** puede recargar `sentinel_audio.py` en caliente si el nuevo motor puede migrar el estado activo.
+
+Más detalle sobre umbrales, modos y limitaciones: [`AUDIO.md`](AUDIO.md).
+
+## Stack
+
+| Área | Tecnología |
 | --- | --- |
-| `py` no se reconoce | Instala Python 3.12 desde el enlace oficial y vuelve a abrir la consola. |
-| El bot no inicia sesión | Vuelve a generar el token y ejecuta `Configurar_Sentinel.cmd`. |
-| `PrivilegedIntentsRequired` | Activa **Message Content Intent** en la sección **Bot** del Developer Portal. |
-| `!vigilar` no responde | Comprueba el intent, los permisos del canal de texto y el permiso **Silenciar miembros** de quien usa el comando. |
-| No entra a voz | Revisa **Ver canal** y **Conectar** para el bot y confirma que haya alguien en el canal. |
-| No abre `localhost:5000` | Mantén abierta la ventana de Sentinel y comprueba que el puerto no esté ocupado. |
+| Bot y eventos de voz | Python 3.12, discord.py, discord-ext-voice-recv |
+| Procesamiento de señal | NumPy, SciPy, WebRTC VAD |
+| Dashboard en tiempo real | Flask, Flask-SocketIO, JavaScript |
+| Persistencia | SQLite |
+| Inicio en Windows | Scripts `.cmd` y entorno virtual creado automáticamente |
 
-Más soluciones: [guía de instalación y solución de problemas](docs/INSTALACION_WINDOWS.md#solución-de-problemas).
+## Seguridad y privacidad
 
-## 📚 Documentación
+- El token se guarda en `.env`; ese archivo está excluido de Git. Si se filtra, regénéralo desde Discord Developer Portal.
+- El audio se analiza localmente en memoria; Sentinel no lo graba ni lo envía a servicios externos. Discord transporta el audio al bot para que pueda analizarlo.
+- El dashboard no tiene autenticación remota. Mantén `SENTINEL_HOST=127.0.0.1` y no publiques el puerto en Internet.
+- Para conectar voz, concede los permisos mínimos necesarios. Para moderar, el bot requiere permisos adicionales de silenciar o mover miembros.
 
-- [Instalación completa en Windows](docs/INSTALACION_WINDOWS.md)
-- [Motor y comportamiento del audio](AUDIO.md)
-- [Cambios del proyecto](CHANGELOG.md)
-- [Cómo contribuir](CONTRIBUTING.md)
-- [Política de seguridad](SECURITY.md)
-
-## 🧑‍💻 Desarrollo
-
-Se requiere Python 3.12. Para instalar dependencias y ejecutar las pruebas:
+## Desarrollo
 
 ```powershell
 py -3.12 -m venv .venv
@@ -95,6 +107,26 @@ py -3.12 -m venv .venv
 .venv\Scripts\python.exe -m unittest discover -s tests -v
 ```
 
-## 📄 Licencia
+La demo se puede iniciar con `Ver_Panel_Demo.cmd`. Para contribuir, consulta [`CONTRIBUTING.md`](CONTRIBUTING.md). Las pruebas cubren el motor de audio, persistencia SQLite, runtime y recuperación.
 
-Este proyecto aún no tiene una licencia. Puedes descargarlo y consultarlo; no se han concedido permisos generales para reutilizarlo, modificarlo o redistribuirlo.
+## Documentación
+
+- [Instalación en Windows](docs/INSTALACION_WINDOWS.md)
+- [Motor de audio y sus límites](AUDIO.md)
+- [Cambios](CHANGELOG.md)
+- [Contribuir](CONTRIBUTING.md)
+- [Seguridad](SECURITY.md)
+
+## Alcance y estado
+
+Sentinel está preparado para Windows con Python 3.12. No se presenta como clasificador de TikTok, música o habla humana: analiza características de la señal y su duración, no el origen semántico del sonido. El uso de castigos debe empezar desactivado y validarse en el servidor donde se instalará.
+
+## Licencia
+
+El repositorio no incluye una licencia. Puedes descargar y consultar el código, pero no hay permisos generales definidos para reutilizarlo, modificarlo o redistribuirlo.
+
+<div align="center">
+
+**Hecho como proyecto personal de ingeniería de software y procesamiento de audio.**
+
+</div>
