@@ -1,12 +1,23 @@
 # Python
 .venv/
+venv/
+.python-version
 __pycache__/
 *.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+build/
+dist/
+*.egg-info/
 
 # Secrets and local configuration
 .env
 .env.*
 !.env.example
+.env.tmp
 
 # Runtime data, databases, logs, and process locks
 sentinel_data.json
@@ -21,11 +32,17 @@ pending_mutes.json.tmp
 logs/
 .sentinel*.lock
 
+# OS-generated files
+.DS_Store
+Thumbs.db
+
 # Downloaded/generated native binaries and local artifacts
 libopus.dll
 Iniciar_Sentinel.exe
 artifacts/
 backups/
+launcher/
+REVISION_SENTINEL.md
 
 # Local patch/context exports
 CAMBIOS_*.patch

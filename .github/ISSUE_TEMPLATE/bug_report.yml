@@ -1,0 +1,44 @@
+name: Reportar un problema
+about: Cuéntanos qué falló para que podamos reproducirlo.
+title: "[Problema]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        No incluyas tokens, archivos `.env`, capturas con IDs privados, logs completos ni datos personales.
+  - type: input
+    id: version
+    attributes:
+      label: Versión o commit
+      placeholder: "Ejemplo: main / hash del commit"
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: ¿Qué pasó?
+      description: Describe el resultado que esperabas y el que viste.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Pasos para reproducirlo
+      placeholder: "1. ...\n2. ..."
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Windows y versión de Python
+      placeholder: "Windows 11; Python 3.12.x"
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Mensaje de error (limpio)
+      description: Pega solo el mensaje relevante y elimina tokens, nombres, IDs y datos del servidor.
+    validations:
+      required: false

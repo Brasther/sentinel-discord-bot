@@ -48,7 +48,7 @@ def main():
         for node in tree.body
     )
     if "--check" in sys.argv:
-        for filename in ['sentinel_core.py', 'sentinel_audio.py', 'sentinel_runtime.py', 'voice_compat.py', 'templates/dashboard.html', 'static/dashboard.css',
+        for filename in ['configurar_sentinel.py', '.env.example', 'sentinel_core.py', 'sentinel_audio.py', 'sentinel_runtime.py', 'voice_compat.py', 'templates/dashboard.html', 'static/dashboard.css',
                          'static/dashboard.js', 'static/vendor/socket.io.min.js']:
             if not (ROOT / filename).is_file():
                 raise RuntimeError('Falta un archivo del proyecto: ' + filename)
@@ -57,7 +57,15 @@ def main():
             print("Pendiente: configurar DISCORD_TOKEN en .env para conectar a Discord.")
         return
     if placeholder and '--preview' not in sys.argv:
-        raise RuntimeError("Configura DISCORD_TOKEN en el archivo .env.")
+        print("Primera configuración: abre el asistente para conectar tu bot de Discord.", flush=True)
+        subprocess.check_call([sys.executable, str(ROOT / 'configurar_sentinel.py'), '--continue'])
+        env_token = ''
+        if env_file.exists():
+            for line in env_file.read_text(encoding='utf-8-sig').splitlines():
+                if line.startswith('DISCORD_TOKEN='):
+                    env_token = line.partition('=')[2].strip().strip('\"\'')
+        if not env_token or env_token == 'TU_TOKEN_AQUI':
+            raise RuntimeError("Configura DISCORD_TOKEN en el archivo .env.")
     if '--preview' in sys.argv:
         # Permite volver a abrir el lanzador mientras la demo ya está funcionando.
         import json

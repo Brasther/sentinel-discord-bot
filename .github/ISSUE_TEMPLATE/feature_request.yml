@@ -1,0 +1,27 @@
+name: Sugerir una mejora
+about: Propón una función o una mejora de uso.
+title: "[Mejora]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Explica el problema que resolvería la idea. No incluyas tokens ni datos privados de Discord.
+  - type: textarea
+    id: problem
+    attributes:
+      label: ¿Qué te gustaría mejorar?
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: ¿Cómo imaginas que funcionaría?
+    validations:
+      required: false
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: ¿Qué alternativas probaste?
+    validations:
+      required: false
