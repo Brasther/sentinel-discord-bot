@@ -1,0 +1,32 @@
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+
+# Runtime data, databases, logs, and process locks
+sentinel_data.json
+sentinel_data.json.tmp
+pending_mutes.json
+pending_mutes.json.tmp
+*.db
+*.db-wal
+*.db-shm
+*.json.migrated
+*.log
+logs/
+.sentinel*.lock
+
+# Downloaded/generated native binaries and local artifacts
+libopus.dll
+Iniciar_Sentinel.exe
+artifacts/
+backups/
+
+# Local patch/context exports
+CAMBIOS_*.patch
+CONTEXTO_COMPLETO_SENTINEL.txt

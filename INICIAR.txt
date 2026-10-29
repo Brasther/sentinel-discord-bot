@@ -1,0 +1,9 @@
+# Sentinel V26
+
+Instalación y guía completa: abre [README.md](README.md).
+
+1. Configura `DISCORD_TOKEN` en una copia local de `.env.example` llamada `.env`.
+2. Haz doble clic en `Iniciar_Sentinel.cmd` y luego abre http://localhost:5000.
+3. Para probar sin conectarte a Discord, usa `Ver_Panel_Demo.cmd` y abre http://localhost:5001.
+
+Se requiere Windows y Python 3.12. El primer inicio instala las dependencias en `.venv`.

@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#10151e">
+  <title>Sentinel · Control de voz</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath fill='%23bef264' d='M16 2 29 7v10c0 7-13 13-13 13S3 24 3 17V7z'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
+  <script src="{{ url_for('static', filename='vendor/socket.io.min.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='dashboard.js') }}" defer></script>
+</head>
+<body>
+<svg class="sprite" aria-hidden="true"><defs>
+  <symbol id="shield" viewBox="0 0 24 24"><path d="m12 3 8 3v6c0 5-8 9-8 9s-8-4-8-9V6z"/><path d="m8 12 3 3 5-6"/></symbol>
+  <symbol id="grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></symbol>
+  <symbol id="wave" viewBox="0 0 24 24"><path d="M3 10v4m4-7v10m5-15v20m5-16v10m4-6v4"/></symbol>
+  <symbol id="sliders" viewBox="0 0 24 24"><path d="M4 7h7m5 0h4M4 17h3m5 0h8"/><circle cx="13" cy="7" r="3"/><circle cx="9" cy="17" r="3"/></symbol>
+  <symbol id="history" viewBox="0 0 24 24"><path d="M3 11a9 9 0 1 1 2 7M3 3v8h8m1-4v6l4 2"/></symbol>
+  <symbol id="activity" viewBox="0 0 24 24"><path d="M2 12h5l3-8 4 16 3-8h5"/></symbol>
+  <symbol id="users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3 21v-3a6 6 0 0 1 12 0v3m0-17a3 3 0 0 1 0 6m3 5a5 5 0 0 1 3 5"/></symbol>
+  <symbol id="bolt" viewBox="0 0 24 24"><path d="m13 2-9 12h7l-1 8 10-12h-7z"/></symbol>
+  <symbol id="arrow" viewBox="0 0 24 24"><path d="M5 12h14m-5-5 5 5-5 5"/></symbol>
+</defs></svg>
+<aside class="sidebar">
+  <a class="brand" href="/"><span class="brand-icon"><svg><use href="#shield"/></svg></span><span>sentinel<span class="brand-sub">Control de ruido</span></span></a>
+  <nav aria-label="Secciones del panel">
+    <button class="nav-item active" data-view="overview"><svg><use href="#grid"/></svg>Inicio<span class="nav-dot"></span></button>
+    <button class="nav-item" data-view="settings"><svg><use href="#sliders"/></svg>Ajustes</button>
+    <button class="nav-item" data-view="history"><svg><use href="#history"/></svg>Actividad<span id="event-count" class="nav-count">0</span></button>
+  </nav>
+</aside>
+<div class="workspace">
+  <header class="topbar">
+    <div class="breadcrumb">Sentinel <span>/</span> <strong id="breadcrumb">Inicio</strong></div>
+    <div class="topbar-right"><span id="preview-badge" class="pill amber" hidden>DATOS DE DEMOSTRACIÓN</span><span id="connection" class="connection"><i></i>Conectando panel</span><time id="clock"></time></div>
+  </header>
+  <main>
+    <div class="page-heading">
+      <div><h1 id="page-title">Tu canal de voz</h1><p id="page-description">Estado y usuarios, en tiempo real.</p></div>
+      <div class="page-actions"><button class="button primary" id="connect-voice" title="Conecta Sentinel a un canal de voz que tenga personas" hidden disabled>Conectar a voz</button><button class="button secondary" id="restart-voice" title="Reinicia Sentinel y lo reconecta al canal actual" disabled>Reiniciar bot y reconectar</button><button class="button primary calibrate">Ajustar ruido automáticamente</button></div>
+    </div>
+    <div id="disconnect-banner" class="banner" hidden>El panel perdió la conexión. Los datos pueden estar desactualizados; los controles están desactivados.</div>
+    <section class="view" id="view-overview">
+      <article class="panel health-panel">
+        <div class="status-copy"><h2 id="health-title">Preparando Sentinel</h2><p id="health-description">Esperando el estado del bot.</p></div>
+        <div class="mode-row"><span><strong id="mode-title">Moderación automática</strong><small id="mode-description">Aplica castigos al superar el límite</small></span><button class="switch" id="auto-toggle" role="switch" aria-checked="true" aria-label="Moderación automática"><span></span></button></div>
+        <div class="mode-row"><span><strong>Entrada automática a voz</strong><small id="auto-join-description">Se conecta al iniciar o cuando alguien entra a un canal</small></span><button class="switch" id="auto-join-toggle" role="switch" aria-checked="true" aria-label="Entrada automática a voz"><span></span></button></div>
+        <div class="mode-row"><span><strong>Volver si lo desconectan</strong><small id="auto-rejoin-description">Se reconecta automáticamente al canal de voz</small></span><button class="switch" id="auto-rejoin-toggle" role="switch" aria-checked="true" aria-label="Volver automáticamente al canal si lo desconectan"><span></span></button></div>
+      </article>
+      <div class="metrics">
+        <article class="metric"><div class="metric-label">Usuarios</div><div class="metric-value" id="metric-users">—</div><div class="metric-note"><span class="tiny-dot lime"></span><span id="channel-note">Esperando un canal de voz</span></div></article>
+        <article class="metric"><div class="metric-label">Con ruido</div><div class="metric-value" id="metric-noise">—</div></article>
+        <article class="metric"><div class="metric-label">Castigos totales</div><div class="metric-value" id="metric-punishments">—</div></article>
+      </div>
+      <article class="panel people-panel">
+        <div class="panel-heading"><h2>Usuarios <span class="count" id="people-count">0</span></h2><input type="search" id="user-search" placeholder="Buscar usuario…" aria-label="Buscar usuario"></div>
+        <div class="people-grid" id="people"><div class="empty-state"><strong>Aún no hay usuarios en escucha</strong><span>Conecta Sentinel con <code>!vigilar</code> para comenzar.</span></div></div>
+        <div class="panel-footnote">Protege a un usuario para que no reciba castigos automáticos.</div>
+      </article>
+      <details class="fold chart-fold">
+        <summary>Ver gráfica de audio</summary>
+        <article class="panel audio-panel">
+          <div class="panel-heading"><h2>Volumen del canal</h2><span class="pill" id="live-pill"><i></i>EN ESPERA</span></div>
+          <div class="chart-toolbar"><div id="chart-legend" class="legend"><span>Las señales aparecerán al comenzar la escucha</span></div><span class="axis-unit">RMS · últimos 30 s</span></div>
+          <div class="chart"><canvas id="audio-chart" aria-label="Volumen RMS por usuario durante los últimos 30 segundos" role="img"></canvas><div id="chart-empty"><strong>Listo para escuchar</strong><span>Entra a un canal y escribe <code>!vigilar</code> en Discord.</span></div></div>
+          <div class="chart-footer"><span><i class="threshold-line"></i>Umbral de ruido <strong id="threshold-text">1.000 RMS</strong></span></div>
+        </article>
+      </details>
+      <details class="fold">
+        <summary>Ver actividad reciente</summary>
+        <article class="panel recent-panel">
+          <div class="panel-heading"><h2>Últimos eventos</h2><button class="text-button" data-view="history" aria-label="Ver todo el historial"><svg><use href="#arrow"/></svg></button></div>
+          <div id="recent-events" class="event-list"><div class="empty-small">Los eventos del sistema aparecerán aquí.</div></div>
+        </article>
+      </details>
+    </section>
+    <section class="view" id="view-settings" hidden>
+      <div class="settings-layout">
+        <article class="panel settings-panel">
+          <div class="panel-heading"><h2>Ruido y castigos</h2><span class="pill">GUARDADO AUTOMÁTICO</span></div>
+          <p class="panel-intro">Los cambios se guardan solos. Si no sabes por dónde empezar, usa el ajuste automático.</p>
+          <div class="audio-settings">
+            <div class="setting">
+              <label for="audio-sensitivity">Sensibilidad</label>
+              <p>Automática adapta el umbral a cada micrófono. Los ajustes de cada persona se guardan en su tarjeta de Inicio.</p>
+              <select id="audio-sensitivity"><option value="auto">Automática (recomendada)</option><option value="manual">Umbral manual</option></select>
+            </div>
+            <div class="setting">
+              <label for="audio-mode">Qué quieres controlar</label>
+              <p id="audio-mode-help">Protege las voces y castiga el ruido repetido.</p>
+              <select id="audio-mode"><option value="noise">Ruido: proteger las voces</option><option value="continuous">Limitar audio continuo (incluye voces)</option></select>
+              <div id="continuous-setting" hidden>
+                <label for="setting-continuous">Tiempo máximo de audio continuo</label>
+                <output id="value-continuous"></output>
+                <input id="setting-continuous" type="range" min="5" max="120" value="15" data-key="CONTINUOUS_SECONDS">
+                <p>También puede castigar una intervención larga. No identifica si el sonido viene de TikTok o de una persona.</p>
+              </div>
+            </div>
+          </div>
+          <div class="setting">
+            <div><label for="setting-rms">Sensibilidad al ruido</label><output id="value-rms"></output></div>
+            <p>Hacia la izquierda detecta ruidos más suaves. Hacia la derecha tolera más volumen.</p>
+            <input id="setting-rms" type="range" min="5" max="10000" step="1" data-key="UMBRAL_RMS">
+            <div class="range-labels"><span>5 · sensible</span><span>10.000 · tolerante</span></div>
+          </div>
+          <div class="setting">
+            <div><label for="setting-duration">Tiempo de castigo</label><output id="value-duration"></output></div>
+            <p>Segundos de mute. Si existe «La Cárcel», también se mueve al usuario durante ese tiempo.</p>
+            <input id="setting-duration" type="range" min="1" max="300" data-key="MUTE_TIME">
+            <div class="range-labels"><span>1 segundo</span><span>300 segundos</span></div>
+          </div>
+          <details class="fold">
+            <summary>Opciones avanzadas</summary>
+            <div class="setting">
+              <div><label for="setting-limit">Límite de infracciones</label><output id="value-limit"></output></div>
+              <p>El ruido suma 8 puntos por bloque de 20 ms (9 al superar el límite continuo), multiplicados por la rapidez individual. La voz protegida resta 1 y el silencio resta 5.</p>
+              <input id="setting-limit" type="range" min="10" max="500" data-key="CASTIGO_MAX">
+              <div class="range-labels"><span>10 · estricto</span><span>500 · paciente</span></div>
+            </div>
+            <div class="setting">
+              <div><label for="setting-tolerance">Ruido continuo</label><output id="value-tolerance"></output></div>
+              <p>Bloques consecutivos sin voz antes de acelerar la puntuación de ruido. A 20 ms por bloque, 100 equivalen a 2 segundos.</p>
+              <input id="setting-tolerance" type="range" min="10" max="1000" step="10" data-key="TIEMPO_TOLERANCIA">
+              <div class="range-labels"><span>10 bloques</span><span>1.000 bloques</span></div>
+            </div>
+            <div class="health-list"><div><span>Discord</span><strong id="health-discord">—</strong></div><div><span>Canal de voz</span><strong id="health-voice">—</strong></div><div><span>Último audio</span><strong id="health-audio">—</strong></div><div><span>Tiempo activo</span><strong id="health-uptime">—</strong></div></div>
+            <article class="metric"><div class="metric-label">Latencia de Discord<svg><use href="#activity"/></svg></div><div class="metric-value"><span id="metric-latency">—</span><small>ms</small></div><div class="metric-note" id="latency-note">Esperando conexión</div></article>
+            <button class="text-button" data-view="diagnostics">Ver diagnóstico y pruebas</button>
+          </details>
+        </article>
+        <div class="settings-side">
+          <article class="panel"><div class="accent-icon"><svg><use href="#wave"/></svg></div><h2>Ajuste automático</h2><p class="panel-intro">Durante 5 segundos, mantengan silencio. Sentinel analiza las muestras sin voz y ajusta el umbral por encima del ruido base.</p><button class="button primary calibrate">Ajustar ruido automáticamente</button><p class="caption">Si Discord no envía suficiente audio, el umbral se conserva.</p></article>
+          <article class="panel"><h2>Usuarios protegidos</h2><p class="panel-intro">También puedes proteger personas desde Inicio. Aquí puedes añadir su ID de Discord.</p><form id="whitelist-form"><label class="sr-only" for="whitelist-id">ID de Discord</label><input id="whitelist-id" inputmode="numeric" pattern="[0-9]+" required placeholder="ID del usuario"><button class="button secondary" type="submit">Añadir</button></form><div id="whitelist-list" class="whitelist-list"></div></article>
+        </div>
+      </div>
+    </section>
+    <section class="view" id="view-history" hidden>
+      <article class="panel">
+        <div class="panel-heading"><h2>Lo que pasó en el canal</h2><button class="button secondary" id="export-events">Exportar CSV</button></div>
+        <div class="history-toolbar"><input type="search" id="event-search" placeholder="Buscar en la actividad…" aria-label="Buscar eventos"><select id="event-filter" aria-label="Filtrar nivel"><option value="all">Todos los eventos</option><option value="info">Información</option><option value="warning">Avisos</option><option value="error">Errores</option></select><span class="caption">Últimos 200 eventos · esta sesión</span></div>
+        <div class="table-wrap"><table><thead><tr><th>HORA</th><th>NIVEL</th><th>EVENTO</th></tr></thead><tbody id="history-rows"></tbody></table></div>
+      </article>
+    </section>
+    <section class="view" id="view-diagnostics" hidden>
+      <div class="diagnostic-grid">
+        <article class="panel"><h2>Los detalles del sistema</h2><dl id="diagnostic-data" class="diagnostic-data"></dl><h2>Comprobación de instalación</h2><p id="setup-check" class="panel-intro">Comprobando…</p><h2>Dependencias instaladas</h2><dl id="dependency-data" class="diagnostic-data"></dl><h2>Permisos de Discord</h2><div id="permission-data" class="diagnostic-data"></div><h2>Errores recientes</h2><div id="recent-errors" class="event-list"></div><p class="panel-intro">El watchdog comprueba la conexión cada 10 segundos. Tras más de 30 segundos sin audio, conserva la escucha si la señalización responde; si está caída o no recibe ACKs recientes, ejecuta el reinicio nuclear.</p></article>
+        <details class="fold">
+          <summary>Pruebas de autodefensa</summary>
+          <article class="panel chaos-panel"><span class="pill amber">PRUEBAS DE AUTODEFENSA</span><h2>Zona de caos</h2><p class="panel-intro">Estas pruebas interrumpen la conexión del bot. Úsalas en un canal de pruebas; te pediremos confirmar la acción.</p><button class="button danger chaos" data-action="deafen">Mutear y ensordecer al bot</button><button class="button danger chaos" data-action="kick">Desconectar al bot</button><p class="caption">El bot retira su mute o ejecuta el reinicio nuclear ante una desconexión.</p></article>
+        </details>
+      </div>
+    </section>
+    <footer>Sentinel · Control de ruido en Discord</footer>
+  </main>
+</div>
+<dialog id="calibration-dialog"><div class="dialog-icon"><svg><use href="#wave"/></svg></div><h2>Un momento de silencio.</h2><p>Estamos escuchando el ruido base del canal.<br>Evita hablar, escribir o reproducir música.</p><div class="progress-track"><div id="calibration-progress"></div></div><div class="calibration-meta"><span id="calibration-samples">0 muestras</span><span id="calibration-percent">0 %</span></div></dialog>
+<dialog id="chaos-dialog"><span class="pill amber">PRUEBA DE AUTODEFENSA</span><h2>¿Ejecutar esta prueba?</h2><p id="chaos-description"></p><div class="dialog-buttons"><button class="button secondary" id="chaos-cancel">Cancelar</button><button class="button danger" id="chaos-confirm">Ejecutar prueba</button></div></dialog>
+<div id="toast" role="status" aria-live="polite"></div>
+</body>
+</html>
